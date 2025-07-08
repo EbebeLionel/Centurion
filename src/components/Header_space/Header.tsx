@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import './Header_dec.css';
 
 interface HeaderProps {
@@ -6,6 +7,8 @@ interface HeaderProps {
 }
 
 const Header: React.FC<HeaderProps> = ({ onNavigate }) => {
+  const navigate = useNavigate();
+  const location = useLocation();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearchFocused, setIsSearchFocused] = useState(false);
@@ -24,7 +27,7 @@ const Header: React.FC<HeaderProps> = ({ onNavigate }) => {
     if (onNavigate) {
       onNavigate(path);
     } else {
-      console.log(`Navigate to ${path}`);
+      navigate(path);
     }
     setIsMenuOpen(false);
   };
@@ -94,11 +97,15 @@ const Header: React.FC<HeaderProps> = ({ onNavigate }) => {
 
           {/* Desktop Navigation */}
           <nav className="desktop-nav">
-            <a className="nav-item" onClick={() => handleNavigate('/models')}>
+            <a className={`nav-item ${location.pathname === '/models' ? 'active' : ''}`} onClick={() => handleNavigate('/models')}>
               <span className="nav-text">3D Models</span>
               <div className="nav-indicator"></div>
             </a>
-            <a className="nav-item login-nav" onClick={() => handleNavigate('/login')}>
+            <a className={`nav-item ${location.pathname.startsWith('/settings') ? 'active' : ''}`} onClick={() => handleNavigate('/settings')}>
+              <span className="nav-text">Settings</span>
+              <div className="nav-indicator"></div>
+            </a>
+            <a className={`nav-item login-nav ${location.pathname === '/login' ? 'active' : ''}`} onClick={() => handleNavigate('/login')}>
               <img
                 className="login-icon"
                 src="https://cdn-icons-png.flaticon.com/128/64/64572.png"
@@ -149,6 +156,23 @@ const Header: React.FC<HeaderProps> = ({ onNavigate }) => {
                 </svg>
               </div>
               <span>3D Models</span>
+              <svg className="nav-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <polyline points="9,18 15,12 9,6"></polyline>
+              </svg>
+            </a>
+
+            <a className="mobile-nav-item" onClick={() => handleNavigate('/settings')}>
+              <div className="mobile-nav-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                  <circle cx="12" cy="12" r="3"></circle>
+                  <path d="m12 1 0 6m0 6 0 6"></path>
+                  <path d="m9 12-7 0m6 0 14 0"></path>
+                  <path d="m9 12 7 0"></path>
+                  <circle cx="12" cy="12" r="3"></circle>
+                  <path d="M12 1v6m0 6v6m9-9h-6m-6 0H3"></path>
+                </svg>
+              </div>
+              <span>Settings</span>
               <svg className="nav-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                 <polyline points="9,18 15,12 9,6"></polyline>
               </svg>

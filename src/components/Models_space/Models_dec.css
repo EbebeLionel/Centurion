@@ -46,6 +46,7 @@ main {
     content: "";
     width: 350px;
   }
+
   .pointer-react{
     border: 2px solid black;
     border-radius: 12px;
@@ -53,7 +54,8 @@ main {
     position: relative;
     margin-bottom: 20px;
   }
-  .pointer-react img{
+  
+  .pointer-react img {
     transition: filter 0.5s;
   }
   .pointer-react:hover img {
