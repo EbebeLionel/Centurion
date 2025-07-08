@@ -1,0 +1,393 @@
+/* SettingsPage.css - Styles for Settings Page */
+
+/* Main Settings Page Container */
+.settings-page {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #BA8FFF, #35A1EF, #8AF4ED);
+  padding: 20px;
+  overflow-x: hidden;
+  padding-top: 70px;
+  font-family: "JetBrains Mono", monospace;
+}
+
+/* Back Button */
+.settings-back-button {
+  position: fixed;
+  top: 80px;
+  left: 20px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.9);
+  border: 2px solid rgba(186, 143, 255, 0.3);
+  border-radius: 12px;
+  padding: 10px 16px;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 14px;
+  font-weight: 600;
+  color: #222222;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  z-index: 100;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.settings-back-button:hover {
+  background: rgba(255, 255, 255, 1);
+  border-color: rgba(186, 143, 255, 0.5);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+}
+
+.settings-back-button svg {
+  width: 18px;
+  height: 18px;
+  stroke-width: 2.5;
+}
+
+/* Settings Container */
+.settings-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 60px 20px 20px 20px;
+}
+
+/* Header Section */
+.settings-header {
+  text-align: center;
+  margin-bottom: 40px;
+}
+
+.settings-title {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 48px;
+  font-weight: 800;
+  color: #222222;
+  margin-bottom: 10px;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.settings-subtitle {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 18px;
+  color: #444;
+  margin-bottom: 30px;
+  font-weight: 500;
+}
+
+/* Current Section Indicator */
+.current-section {
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 15px;
+  padding: 15px 25px;
+  margin: 20px auto;
+  max-width: 400px;
+  text-align: center;
+  font-family: "JetBrains Mono", monospace;
+  font-weight: 600;
+  color: #333;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+/* Search Bar */
+.settings-search {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 60px;
+}
+
+.settings-search-container {
+  position: relative;
+  width: 100%;
+  max-width: 600px;
+}
+
+.settings-search-input {
+  width: 100%;
+  padding: 18px 25px 18px 60px;
+  font-size: 18px;
+  font-family: "JetBrains Mono", monospace;
+  border: 3px solid rgba(255, 255, 255, 0.4);
+  border-radius: 30px;
+  outline: none;
+  background: rgba(255, 255, 255, 0.9);
+  color: #333;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+  box-sizing: border-box;
+}
+
+.settings-search-input:focus {
+  border-color: #BA8FFF;
+  box-shadow: 0 0 0 6px rgba(186, 143, 255, 0.2);
+  background: #ffffff;
+}
+
+.settings-search-input::placeholder {
+  color: #999;
+  font-style: italic;
+}
+
+.settings-search-icon {
+  position: absolute;
+  left: 22px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 22px;
+  color: #666;
+}
+
+/* Pie Chart Container */
+.pie-chart-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 600px;
+  position: relative;
+}
+
+.pie-chart {
+  width: 500px;
+  height: 500px;
+  position: relative;
+}
+
+/* Base Quarter Circle Styling */
+.pie-section {
+  position: absolute;
+  width: 250px;
+  height: 250px;
+  cursor: pointer;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.pie-section:hover {
+  transform: scale(1.1);
+  z-index: 10;
+  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3);
+}
+
+.pie-section.active {
+  transform: scale(1.15);
+  z-index: 15;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
+  filter: brightness(1.1);
+}
+
+/* Account - Top Right Quarter Circle */
+#account-section {
+  top: 0;
+  left: 250px;
+  background: #BA8FFF;
+  border-radius: 0 250px 0 0;
+}
+
+/* Privacy & Security - Bottom Right Quarter Circle */
+#privacy-section {
+  top: 250px;
+  left: 250px;
+  background: #B900FA;
+  border-radius: 0 0 250px 0;
+}
+
+/* System - Bottom Left Quarter Circle */
+#system-section {
+  top: 250px;
+  left: 0;
+  background: #35A1EF;
+  border-radius: 0 0 0 250px;
+}
+
+/* Help & Support - Top Left Quarter Circle */
+#help-section {
+  top: 0;
+  left: 0;
+  background: #8AF4ED;
+  border-radius: 250px 0 0 0;
+}
+
+/* Section Content */
+.pie-section-content {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-family: "JetBrains Mono", monospace;
+  font-weight: 700;
+  text-align: center;
+  position: relative;
+}
+
+/* Content positioning for each specific section */
+#account-section .pie-section-content {
+  padding: 60px 60px 120px 120px;
+}
+
+#privacy-section .pie-section-content {
+  padding: 120px 60px 60px 120px;
+}
+
+#system-section .pie-section-content {
+  padding: 120px 120px 60px 60px;
+}
+
+#help-section .pie-section-content {
+  padding: 60px 120px 120px 60px;
+}
+
+.pie-section-icon {
+  font-size: 40px;
+  margin-bottom: 12px;
+  filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.4));
+  transition: transform 0.3s ease;
+}
+
+.pie-section:hover .pie-section-icon {
+  transform: scale(1.2);
+}
+
+.pie-section-label {
+  font-size: 16px;
+  line-height: 1.3;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.6);
+  font-weight: 800;
+}
+
+/* Center Hole */
+.pie-center {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 180px;
+  height: 180px;
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 20;
+  box-shadow: 0 0 40px rgba(0, 0, 0, 0.2);
+  backdrop-filter: blur(15px);
+  border: 4px solid rgba(186, 143, 255, 0.4);
+  transition: all 0.3s ease;
+}
+
+.pie-center-icon {
+  font-size: 32px;
+  margin-bottom: 10px;
+  transition: transform 0.3s ease;
+}
+
+.pie-center-text {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 16px;
+  font-weight: 700;
+  color: #333;
+  text-align: center;
+  line-height: 1.3;
+}
+
+/* No Results */
+.no-results {
+  text-align: center;
+  color: #444;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 20px;
+  font-weight: 600;
+  margin-top: 60px;
+  padding: 40px;
+  background: rgba(255, 255, 255, 0.8);
+  border-radius: 20px;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .settings-back-button {
+    top: 70px;
+    left: 10px;
+    padding: 8px 12px;
+    font-size: 12px;
+  }
+
+  .settings-container {
+    padding: 40px 10px 20px 10px;
+  }
+
+  .settings-title {
+    font-size: 36px;
+  }
+
+  .pie-chart {
+    width: 350px;
+    height: 350px;
+  }
+
+  .pie-section {
+    width: 175px;
+    height: 175px;
+  }
+
+  #account-section {
+    left: 175px;
+    border-radius: 0 175px 0 0;
+  }
+
+  #privacy-section {
+    top: 175px;
+    left: 175px;
+    border-radius: 0 0 175px 0;
+  }
+
+  #system-section {
+    top: 175px;
+    border-radius: 0 0 0 175px;
+  }
+
+  #help-section {
+    border-radius: 175px 0 0 0;
+  }
+
+  .pie-center {
+    width: 120px;
+    height: 120px;
+  }
+
+  .pie-center-icon {
+    font-size: 24px;
+  }
+
+  .pie-center-text {
+    font-size: 12px;
+  }
+
+  #account-section .pie-section-content {
+    padding: 40px 40px 80px 80px;
+  }
+
+  #privacy-section .pie-section-content {
+    padding: 80px 40px 40px 80px;
+  }
+
+  #system-section .pie-section-content {
+    padding: 80px 80px 40px 40px;
+  }
+
+  #help-section .pie-section-content {
+    padding: 40px 80px 80px 40px;
+  }
+
+  .pie-section-icon {
+    font-size: 28px;
+  }
+
+  .pie-section-label {
+    font-size: 14px;
+  }
+}
