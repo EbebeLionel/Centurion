@@ -2,50 +2,14 @@ import './Models_dec.css';
 import Header from '../Header_space/Header';
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-
-const items = [
-  {
-    id: 1,
-    name: "Malenia",
-    img: "https://tse3.mm.bing.net/th?id=OIP.uIDEAgOeB1feLJ4hBcZRJQHaEK&pid=Api&P=0&h=220",
-    category: "characters",
-    price: "$24.99"
-  },
-  {
-    id: 2,
-    name: "Radahn",
-    img: "https://tse2.mm.bing.net/th?id=OIP.5p1oE1izcBrr6kqPaB755AHaEK&pid=Api&P=0&h=220",
-    category: "characters",
-    price: "$29.99"
-  },
-  {
-    id: 3,
-    name: "Goku",
-    img: "https://tse2.mm.bing.net/th?id=OIP.RvZBJb7M19bnds9w5pH4ugHaE5&pid=Api&P=0&h=220",
-    category: "characters",
-    price: "$19.99"
-  },
-  {
-    id: 4,
-    name: "Vegeta",
-    img: "https://tse2.mm.bing.net/th?id=OIP.6kFD8fmxtr0I65f5eIeywgHaGL&pid=Api&P=0&h=220",
-    category: "characters",
-    price: "$19.99"
-  },
-  {
-    id: 5,
-    name: "Tarnished",
-    img: "https://tse2.mm.bing.net/th/id/OIP.eEOuN7GvsAgX8ndZPcPXaQHaDt?pid=Api&P=0&h=220",
-    category: "characters",
-    price: "$22.99"
-  }
-];
+import { ModelItem, getAllModels, formatPrice } from '../../utils/modelsStore';
 
 const Models: React.FC = () => {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const [search, setSearch] = useState('');
   const [isCategoryMenuOpen, setIsCategoryMenuOpen] = useState(false);
+  const [models, setModels] = useState<ModelItem[]>([]);
 
   // Navigation items array - same as Home page
   const navigationItems = [
@@ -55,8 +19,11 @@ const Models: React.FC = () => {
     { id: 'swords', label: 'Swords', href: '#swords' },
   ];
 
-  // Get search query from URL params on component mount
+  // Load models and get search query from URL params on component mount
   useEffect(() => {
+    const allModels = getAllModels();
+    setModels(allModels);
+    
     const searchQuery = searchParams.get('search');
     if (searchQuery) {
       setSearch(searchQuery);
@@ -92,17 +59,26 @@ const Models: React.FC = () => {
     setIsCategoryMenuOpen(!isCategoryMenuOpen);
   };
 
-  // Filter items based on search
-  const filteredItems = items.filter((item) =>
-    item.name.toLowerCase().includes(search.toLowerCase())
+  // Filter models based on search
+  const filteredModels = models.filter((model) =>
+    model.name.toLowerCase().includes(search.toLowerCase())
   );
 
   // Handle model click (for future individual model pages)
-  const handleModelClick = (item: typeof items[0], e: React.MouseEvent) => {
+  const handleModelClick = (model: ModelItem, e: React.MouseEvent) => {
     e.preventDefault();
-    console.log(`Clicked on model: ${item.name}`);
+    console.log(`Clicked on model: ${model.name}`);
     // Future: navigate to individual model page
-    // navigate(`/models/${item.id}`);
+    // navigate(`/models/${model.id}`);
+  };
+
+  // Handle add to cart
+  const handleAddToCart = (model: ModelItem, e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    console.log(`Added to cart: ${model.name}`);
+    // Future: implement cart functionality
+    alert(`Added "${model.name}" to cart!`);
   };
 
   return (
@@ -171,26 +147,39 @@ const Models: React.FC = () => {
             </div>
 
             <div className="gallery">
-              {filteredItems.map((item) => (
-                <div className="pointer-react" key={item.id}>
-                  <a
-                    href="#"
-                    onClick={(e) => handleModelClick(item, e)}
-                  >
-                    <img src={item.img} alt={item.name} />
-                  </a>
-                  <div className="overlay"></div>
-                  <div className="price-box">
-                    <span className="price">{item.price}</span>
+              {filteredModels.map((model) => (
+                <div className="pointer-react" key={model.id}>
+                  <div className="image-container">
+                    <a
+                      href="#"
+                      onClick={(e) => handleModelClick(model, e)}
+                    >
+                      <img src={model.image} alt={model.name} />
+                    </a>
+                    <div className="overlay"></div>
+                    <div className="price-box">
+                      <span className="price">{formatPrice(model.price)}</span>
+                    </div>
+                    <button
+                      className="add-to-cart-button"
+                      onClick={(e) => handleAddToCart(model, e)}
+                    >
+                      🛒 Add to Cart
+                    </button>
+                    {model.isUserUploaded && (
+                      <div className="user-uploaded-badge">
+                        <span>Your Upload</span>
+                      </div>
+                    )}
                   </div>
                   <div className="title">
-                    <h3>{item.name}</h3>
+                    <h3>{model.name}</h3>
                   </div>
                 </div>
               ))}
               
               {/* Show message when no results found */}
-              {filteredItems.length === 0 && search && (
+              {filteredModels.length === 0 && search && (
                 <div style={{
                   textAlign: 'center',
                   padding: '40px',
@@ -200,6 +189,20 @@ const Models: React.FC = () => {
                   color: '#666'
                 }}>
                   No models found for "{search}". Try a different search term.
+                </div>
+              )}
+              
+              {/* Show message when no models at all */}
+              {models.length === 0 && !search && (
+                <div style={{
+                  textAlign: 'center',
+                  padding: '40px',
+                  width: '100%',
+                  fontFamily: '"Karla", sans-serif',
+                  fontSize: '18px',
+                  color: '#666'
+                }}>
+                  No models available. Upload some models to get started!
                 </div>
               )}
             </div>
