@@ -1,8 +1,10 @@
 import './Models_dec.css';
 import Header from '../Header_space/Header';
+import FloatingCartButton from '../FloatingCartButton/FloatingCartButton';
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { ModelItem, getAllModels, formatPrice } from '../../utils/modelsStore';
+import { cartStore } from '../../utils/cartStore';
 
 const Models: React.FC = () => {
   const navigate = useNavigate();
@@ -10,6 +12,7 @@ const Models: React.FC = () => {
   const [search, setSearch] = useState('');
   const [isCategoryMenuOpen, setIsCategoryMenuOpen] = useState(false);
   const [models, setModels] = useState<ModelItem[]>([]);
+  const [cartItemCount, setCartItemCount] = useState(0);
 
   // Navigation items array - same as Home page
   const navigationItems = [
@@ -29,6 +32,22 @@ const Models: React.FC = () => {
       setSearch(searchQuery);
     }
   }, [searchParams]);
+
+  // Subscribe to cart changes
+  useEffect(() => {
+    const updateCartCount = () => {
+      setCartItemCount(cartStore.getTotalItemCount());
+    };
+
+    // Set initial count
+    updateCartCount();
+
+    // Subscribe to changes
+    const unsubscribe = cartStore.subscribe(updateCartCount);
+
+    // Cleanup
+    return unsubscribe;
+  }, []);
 
   // Custom navigation function for Header
   const handleHeaderNavigation = (path: string) => {
@@ -76,14 +95,14 @@ const Models: React.FC = () => {
   const handleAddToCart = (model: ModelItem, e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
+    cartStore.addToCart(model);
     console.log(`Added to cart: ${model.name}`);
-    // Future: implement cart functionality
-    alert(`Added "${model.name}" to cart!`);
   };
 
   return (
     <>
       <Header onNavigate={handleHeaderNavigation} />
+      <FloatingCartButton cartItemCount={cartItemCount} />
       <main>
         <section>
           <div className="parent-content-new-tab">
@@ -161,10 +180,10 @@ const Models: React.FC = () => {
                       <span className="price">{formatPrice(model.price)}</span>
                     </div>
                     <button
-                      className="add-to-cart-button"
+                      className={`add-to-cart-button ${cartStore.isInCart(model.id) ? 'in-cart' : ''}`}
                       onClick={(e) => handleAddToCart(model, e)}
                     >
-                      🛒 Add to Cart
+                      {cartStore.isInCart(model.id) ? '✓ In Cart' : '🛒 Add to Cart'}
                     </button>
                     {model.isUserUploaded && (
                       <div className="user-uploaded-badge">

@@ -6,6 +6,7 @@ import Login from './components/Login_space/Login';
 import SignUp from './components/SignUp_space/SignUp';
 import SettingsPage from './components/Settings_page/Settings';
 import Sell from './components/Sell_page/Sell';
+import Cart from './components/Cart_Page/Cart';
 import { JSX } from 'react';
 
 function App(): JSX.Element {
@@ -22,6 +23,9 @@ function App(): JSX.Element {
         
         {/* Sell Routes */}
         <Route path="/sell" element={<Sell />} />
+        
+        {/* Cart Routes */}
+        <Route path="/cart" element={<Cart />} />
         
         {/* Authentication Routes */}
         <Route path="/login" element={<Login />} />

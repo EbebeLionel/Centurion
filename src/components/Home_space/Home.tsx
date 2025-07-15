@@ -1,11 +1,14 @@
 import './Home_dec.css';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Header from '../Header_space/Header';
+import FloatingCartButton from '../FloatingCartButton/FloatingCartButton';
 import { useNavigate } from 'react-router-dom';
+import { cartStore } from '../../utils/cartStore';
 
 const Home: React.FC = () => {
   const navigate = useNavigate();
   const [isCategoryMenuOpen, setIsCategoryMenuOpen] = useState(false);
+  const [cartItemCount, setCartItemCount] = useState(0);
   
   // Navigation items array - easily add/remove items here
   const navigationItems = [
@@ -39,10 +42,27 @@ const Home: React.FC = () => {
   const handleHeaderNavigation = (path: string) => {
     navigate(path);
   }
+
+  // Subscribe to cart changes
+  useEffect(() => {
+    const updateCartCount = () => {
+      setCartItemCount(cartStore.getTotalItemCount());
+    };
+
+    // Set initial count
+    updateCartCount();
+
+    // Subscribe to changes
+    const unsubscribe = cartStore.subscribe(updateCartCount);
+
+    // Cleanup
+    return unsubscribe;
+  }, []);
   
   return (
     <>
       <Header onNavigate={handleHeaderNavigation} />
+      <FloatingCartButton cartItemCount={cartItemCount} />
       <section className="intro-pic">
         <div className="intro-title-overlay">
           <h1 className="intro-main-title">CENTURION</h1>
