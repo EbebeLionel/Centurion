@@ -68,22 +68,70 @@ main {
   .overlay {
     width: 100%;
     height: 0;
-    background-color: #b94eeb52;
+    background: linear-gradient(135deg, rgba(185, 78, 235, 0.8), rgba(53, 161, 239, 0.8));
     opacity: 0;
     position: absolute;
     left: 0;
     bottom: 0;
-    border-radius: 0 0 12px 12px;
-    /*transform: translateY(100%);*/
-    transition:  0.2s ease;
+    border-radius: 12px;
+    transition: all 0.3s ease;
     overflow: hidden;
+    backdrop-filter: blur(5px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
+  
+  .overlay::before {
+    content: "View Model";
+    color: white;
+    font-family: "Karla", sans-serif;
+    font-size: 18px;
+    font-weight: 600;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    opacity: 0;
+    transition: opacity 0.3s ease 0.1s;
+  }
+  
   .gallery .pointer-react:hover .overlay {
     opacity: 1;
     transform: translateY(0);
     height: 100%;
     cursor: pointer;
-    filter: blur(2px);
+  }
+  
+  .gallery .pointer-react:hover .overlay::before {
+    opacity: 1;
+  }
+
+  /* Price box styling */
+  .price-box {
+    position: absolute;
+    bottom: 10px;
+    left: 10px;
+    background: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-family: "Karla", sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    z-index: 2;
+    transition: all 0.3s ease;
+  }
+  
+  .price-box:hover {
+    background: rgba(0, 0, 0, 0.9);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  }
+  
+  .price {
+    display: block;
+    letter-spacing: 0.5px;
   }
 
 /* Search bar styling */

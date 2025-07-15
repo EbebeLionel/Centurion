@@ -8,31 +8,36 @@ const items = [
     id: 1,
     name: "Malenia",
     img: "https://tse3.mm.bing.net/th?id=OIP.uIDEAgOeB1feLJ4hBcZRJQHaEK&pid=Api&P=0&h=220",
-    category: "characters"
+    category: "characters",
+    price: "$24.99"
   },
   {
     id: 2,
     name: "Radahn",
     img: "https://tse2.mm.bing.net/th?id=OIP.5p1oE1izcBrr6kqPaB755AHaEK&pid=Api&P=0&h=220",
-    category: "characters"
+    category: "characters",
+    price: "$29.99"
   },
   {
     id: 3,
     name: "Goku",
     img: "https://tse2.mm.bing.net/th?id=OIP.RvZBJb7M19bnds9w5pH4ugHaE5&pid=Api&P=0&h=220",
-    category: "characters"
+    category: "characters",
+    price: "$19.99"
   },
   {
     id: 4,
     name: "Vegeta",
     img: "https://tse2.mm.bing.net/th?id=OIP.6kFD8fmxtr0I65f5eIeywgHaGL&pid=Api&P=0&h=220",
-    category: "characters"
+    category: "characters",
+    price: "$19.99"
   },
   {
     id: 5,
     name: "Tarnished",
     img: "https://tse2.mm.bing.net/th/id/OIP.eEOuN7GvsAgX8ndZPcPXaQHaDt?pid=Api&P=0&h=220",
-    category: "characters"
+    category: "characters",
+    price: "$22.99"
   }
 ];
 
@@ -168,13 +173,16 @@ const Models: React.FC = () => {
             <div className="gallery">
               {filteredItems.map((item) => (
                 <div className="pointer-react" key={item.id}>
-                  <a 
-                    href="#" 
+                  <a
+                    href="#"
                     onClick={(e) => handleModelClick(item, e)}
                   >
                     <img src={item.img} alt={item.name} />
                   </a>
                   <div className="overlay"></div>
+                  <div className="price-box">
+                    <span className="price">{item.price}</span>
+                  </div>
                   <div className="title">
                     <h3>{item.name}</h3>
                   </div>

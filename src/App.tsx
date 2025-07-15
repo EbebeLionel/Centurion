@@ -5,6 +5,7 @@ import Models from './components/Models_space/Models';
 import Login from './components/Login_space/Login';
 import SignUp from './components/SignUp_space/SignUp';
 import SettingsPage from './components/Settings_page/Settings';
+import Sell from './components/Sell_page/Sell';
 import { JSX } from 'react';
 
 function App(): JSX.Element {
@@ -18,6 +19,9 @@ function App(): JSX.Element {
         {/* Models Routes */}
         <Route path="/models" element={<Models />} />
         <Route path="/models/:id" element={<Models />} /> {/* For individual model pages in the future */}
+        
+        {/* Sell Routes */}
+        <Route path="/sell" element={<Sell />} />
         
         {/* Authentication Routes */}
         <Route path="/login" element={<Login />} />

@@ -101,6 +101,10 @@ const Header: React.FC<HeaderProps> = ({ onNavigate }) => {
               <span className="nav-text">3D Models</span>
               <div className="nav-indicator"></div>
             </a>
+            <a className={`nav-item ${location.pathname === '/sell' ? 'active' : ''}`} onClick={() => handleNavigate('/sell')}>
+              <span className="nav-text">Sell</span>
+              <div className="nav-indicator"></div>
+            </a>
             <a className={`nav-item ${location.pathname.startsWith('/settings') ? 'active' : ''}`} onClick={() => handleNavigate('/settings')}>
               <span className="nav-text">Settings</span>
               <div className="nav-indicator"></div>
@@ -156,6 +160,20 @@ const Header: React.FC<HeaderProps> = ({ onNavigate }) => {
                 </svg>
               </div>
               <span>3D Models</span>
+              <svg className="nav-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <polyline points="9,18 15,12 9,6"></polyline>
+              </svg>
+            </a>
+
+            <a className="mobile-nav-item" onClick={() => handleNavigate('/sell')}>
+              <div className="mobile-nav-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                  <circle cx="9" cy="21" r="1"></circle>
+                  <circle cx="20" cy="21" r="1"></circle>
+                  <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+                </svg>
+              </div>
+              <span>Sell</span>
               <svg className="nav-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                 <polyline points="9,18 15,12 9,6"></polyline>
               </svg>
