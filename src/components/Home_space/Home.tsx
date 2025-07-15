@@ -1,12 +1,11 @@
 import './Home_dec.css';
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import Header from '../Header_space/Header';
 import { useNavigate } from 'react-router-dom';
 
 const Home: React.FC = () => {
   const navigate = useNavigate();
   const [isCategoryMenuOpen, setIsCategoryMenuOpen] = useState(false);
-  const [isVisible, setIsVisible] = useState(false);
   
   // Navigation items array - easily add/remove items here
   const navigationItems = [
@@ -22,11 +21,6 @@ const Home: React.FC = () => {
   const colTwoUrl = "https://cdn.cgdream.ai/_next/image?url=https%3A%2F%2Fapi.cgdream.ai%2Frails%2Factive_storage%2Fblobs%2Fredirect%2FeyJfcmFpbHMiOnsibWVzc2FnZSI6IkJBaHBBellTSFE9PSIsImV4cCI6bnVsbCwicHVyIjoiYmxvYl9pZCJ9fQ%3D%3D--6904d1220f4631d3d2e9eb52c1a3cfd06ca3f5ee%2Fd27b80ff-c651-4559-b212-a93ee354dcc1_0.png&w=512&q=90";
   const colThreeUrl = "https://cdn.cgdream.ai/_next/image?url=https%3A%2F%2Fapi.cgdream.ai%2Frails%2Factive_storage%2Fblobs%2Fredirect%2FeyJfcmFpbHMiOnsibWVzc2FnZSI6IkJBaHBBMmt6SlE9PSIsImV4cCI6bnVsbCwicHVyIjoiYmxvYl9pZCJ9fQ%3D%3D--c936eb592cade01150d5032353bf6877de2eaf47%2Fd22006f6-d457-4aff-8872-2d094fb7500f_0.png&w=512&q=90";
   
-  // Animation effect on component mount
-  useEffect(() => {
-    setIsVisible(true);
-  }, []);
-
   // Handle "Get started" button click - navigate to signup
   const handleGetStartedClick = (): void => {
     navigate('/signup');
@@ -49,19 +43,10 @@ const Home: React.FC = () => {
   return (
     <>
       <Header onNavigate={handleHeaderNavigation} />
-      
       <section className="intro-pic">
-        <div className="intro-overlay"></div>
-        <div className="intro-content">
-          <div className="intro-particles"></div>
-          <h1 className="intro-title">
-            <span className="intro-title-line">Welcome to</span>
-            <span className="intro-title-main">CENTURION</span>
-            <span className="intro-title-subtitle">3D Platform</span>
-          </h1>
-          <p className="intro-description">
-            Unleash the power of AI-driven 3D model creation
-          </p>
+        <div className="intro-title-overlay">
+          <h1 className="intro-main-title">CENTURION</h1>
+          <p className="intro-subtitle">Where Dreams Become Reality</p>
         </div>
       </section>
 
@@ -118,176 +103,111 @@ const Home: React.FC = () => {
               </div>
             </div>
             
-            {/* Info Section 1 - Where imagination meets reality */}
-            <div className={`info1 container ${isVisible ? 'animate-in' : ''}`}>
+            <div className="info1 container">
               <div className="info1-text">
-                <div className="text-decoration">
-                  <div className="floating-icon">✨</div>
-                </div>
                 <h1>Where imagination meets reality</h1>
                 <p>
                   CENTURION is an interactive mind-blowing application that
-                  utilizes AI to fashion images into stunning 3D models
+                  utilizes cutting-edge AI technology to transform your creative visions into stunning 3D models. 
+                  Experience the future of digital art creation where every idea becomes a masterpiece. 
+                  Our advanced algorithms analyze your concepts and bring them to life with unprecedented detail and realism.
                 </p>
-                <div className="feature-highlights">
-                  <div className="feature-item">
-                    <div className="feature-icon">🎨</div>
-                    <span>AI-Powered Creation</span>
-                  </div>
-                  <div className="feature-item">
-                    <div className="feature-icon">⚡</div>
-                    <span>Lightning Fast</span>
-                  </div>
-                  <div className="feature-item">
-                    <div className="feature-icon">🔥</div>
-                    <span>Professional Quality</span>
-                  </div>
-                </div>
               </div>
-              <div className="info1-image-container">
-                <div className="image-glow"></div>
+              <div className="enhanced-image-container">
+                <div className="image-decoration-ring"></div>
+                <div className="image-glow-effect"></div>
                 <img
                   src={infoOneUrl}
                   alt="Ninja"
-                  className="info1-image"
+                  className="info1-image enhanced-image"
                 />
-                <div className="image-frame"></div>
+                <div className="image-border-frame"></div>
+                <div className="floating-particles"></div>
               </div>
             </div>
 
-            {/* Info Section 2 - Custom 3D model enthusiast */}
-            <div className={`info2 container ${isVisible ? 'animate-in-delay' : ''}`}>
-              <div className="info2-image-container">
-                <div className="image-glow-blue"></div>
+            <div className="info2 container">
+              <div className="enhanced-image-container">
+                <div className="image-decoration-ring blue"></div>
+                <div className="image-glow-effect blue"></div>
                 <img
                   src={infoTwoUrl}
                   alt="3D object"
-                  className="info2-image"
+                  className="info2-image enhanced-image"
                 />
-                <div className="image-frame-blue"></div>
+                <div className="image-border-frame blue"></div>
+                <div className="floating-particles blue"></div>
               </div>
               <div className="info2-text">
-                <div className="text-decoration-right">
-                  <div className="floating-icon-blue">🚀</div>
-                </div>
                 <h1>Custom 3D model enthusiast?</h1>
-                <p>Join thousands of creators who are already transforming their ideas into reality</p>
-                <div className="button-container">
-                  <button className="GS-button" id="GS-btn" onClick={handleGetStartedClick}>
-                    <span className="button-text">Get started</span>
-                    <div className="button-glow"></div>
-                    <svg className="button-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                      <polyline points="9,18 15,12 9,6"></polyline>
-                    </svg>
-                  </button>
-                </div>
-                <div className="stats-container">
-                  <div className="stat-item">
-                    <div className="stat-number">10K+</div>
-                    <div className="stat-label">Happy Users</div>
-                  </div>
-                  <div className="stat-item">
-                    <div className="stat-number">50K+</div>
-                    <div className="stat-label">Models Created</div>
-                  </div>
-                </div>
+                <p>
+                  Join thousands of creators who have revolutionized their workflow with CENTURION. 
+                  Perfect for games, architecture, and VR experiences. 
+                  Achieve professional results in minutes, not hours.
+                </p>
+                <button className="GS-button" id="GS-btn" onClick={handleGetStartedClick}>
+                  Get started
+                </button>
               </div>
             </div>
 
-            {/* Info Section 3 - 3D Model Marketplace */}
-            <div className={`info3 container2 ${isVisible ? 'animate-in-late' : ''}`}>
-              <div className="info3-header">
-                <div className="info3-text">
-                  <div className="marketplace-decoration">
-                    <div className="floating-icon-purple">🛍️</div>
+            <div className="info3 container2">
+              <div className="info3-text">
+                <h1>3D Model Marketplace</h1>
+                <p>
+                  Choose from a variety of 3D models for use in architecture,
+                  gaming, VR, advertisement, 3D printing, animation
+                </p>
+              </div>
+
+              <div className="info3-content1">
+                <div className="marketplace-box">
+                  <div className="box-decoration-ring"></div>
+                  <div className="box-glow-effect"></div>
+                  <img
+                    src={colOneUrl}
+                    alt="video game"
+                    className="info3-image1 marketplace-image"
+                  />
+                  <div className="box-content">
+                    <p className="info3-p1">Buy 3D models for your video games</p>
                   </div>
-                  <h1>3D Model Marketplace</h1>
-                  <p>
-                    Choose from a variety of premium 3D models for use in architecture,
-                    gaming, VR, advertisement, 3D printing, and animation
-                  </p>
-                  <div className="marketplace-stats">
-                    <div className="marketplace-stat">
-                      <span className="stat-icon">📦</span>
-                      <span>1000+ Models</span>
-                    </div>
-                    <div className="marketplace-stat">
-                      <span className="stat-icon">⭐</span>
-                      <span>Premium Quality</span>
-                    </div>
-                    <div className="marketplace-stat">
-                      <span className="stat-icon">💎</span>
-                      <span>Exclusive Designs</span>
-                    </div>
-                  </div>
+                  <div className="box-border-frame"></div>
+                  <div className="box-floating-elements"></div>
                 </div>
               </div>
 
-              <div className="info3-grid">
-                <div className="info3-content1 marketplace-card">
-                  <div className="card-glow"></div>
-                  <div className="card-image-container">
-                    <img
-                      src={colOneUrl}
-                      alt="video game"
-                      className="info3-image1"
-                    />
-                    <div className="card-overlay">
-                      <div className="card-icon">🎮</div>
-                    </div>
+              <div className="info3-content2">
+                <div className="marketplace-box">
+                  <div className="box-decoration-ring purple"></div>
+                  <div className="box-glow-effect purple"></div>
+                  <img
+                    src={colTwoUrl}
+                    alt="3D model"
+                    className="info3-image2 marketplace-image"
+                  />
+                  <div className="box-content">
+                    <p className="info3-p2">Buy 3D models for your 3D printing</p>
                   </div>
-                  <div className="card-content">
-                    <h3>Gaming Assets</h3>
-                    <p className="info3-p1">Premium 3D models for your video games and interactive experiences</p>
-                    <div className="card-features">
-                      <span className="feature-tag">Game Ready</span>
-                      <span className="feature-tag">Optimized</span>
-                    </div>
-                  </div>
+                  <div className="box-border-frame purple"></div>
+                  <div className="box-floating-elements purple"></div>
                 </div>
+              </div>
 
-                <div className="info3-content2 marketplace-card">
-                  <div className="card-glow"></div>
-                  <div className="card-image-container">
-                    <img
-                      src={colTwoUrl}
-                      alt="3D model"
-                      className="info3-image2"
-                    />
-                    <div className="card-overlay">
-                      <div className="card-icon">🖨️</div>
-                    </div>
+              <div className="info3-content3">
+                <div className="marketplace-box">
+                  <div className="box-decoration-ring green"></div>
+                  <div className="box-glow-effect green"></div>
+                  <img
+                    src={colThreeUrl}
+                    alt="architecture"
+                    className="info3-image3 marketplace-image"
+                  />
+                  <div className="box-content">
+                    <p className="info3-p3">Buy 3D models for your architecture</p>
                   </div>
-                  <div className="card-content">
-                    <h3>3D Printing</h3>
-                    <p className="info3-p2">High-quality models optimized for 3D printing and prototyping</p>
-                    <div className="card-features">
-                      <span className="feature-tag">Print Ready</span>
-                      <span className="feature-tag">Detailed</span>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="info3-content3 marketplace-card">
-                  <div className="card-glow"></div>
-                  <div className="card-image-container">
-                    <img
-                      src={colThreeUrl}
-                      alt="architecture"
-                      className="info3-image3"
-                    />
-                    <div className="card-overlay">
-                      <div className="card-icon">🏗️</div>
-                    </div>
-                  </div>
-                  <div className="card-content">
-                    <h3>Architecture</h3>
-                    <p className="info3-p3">Professional architectural models for visualization and design</p>
-                    <div className="card-features">
-                      <span className="feature-tag">Professional</span>
-                      <span className="feature-tag">Realistic</span>
-                    </div>
-                  </div>
+                  <div className="box-border-frame green"></div>
+                  <div className="box-floating-elements green"></div>
                 </div>
               </div>
             </div>
