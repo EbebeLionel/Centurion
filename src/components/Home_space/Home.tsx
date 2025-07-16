@@ -16,6 +16,7 @@ const Home: React.FC = () => {
     { id: 'architecture', label: 'Architecture', href: '#architecture' },
     { id: 'vehicles', label: 'Vehicles', href: '#vehicles' },
     { id: 'swords', label: 'Swords', href: '#swords' },
+    { id: 'warrior', label: 'Warrior', href: '#warrior' },
   ];
 
   const infoOneUrl = "https://cdn.cgdream.ai/_next/image?url=https%3A%2F%2Fapi.cgdream.ai%2Frails%2Factive_storage%2Fblobs%2Fredirect%2FeyJfcmFpbHMiOnsibWVzc2FnZSI6IkJBaHBBOUUyRnc9PSIsImV4cCI6bnVsbCwicHVyIjoiYmxvYl9pZCJ9fQ%3D%3D--26c712540287369ed6fd9952c7e66e9e75622a53%2Fe4c4bd12-274f-450c-9f76-e85fa39d9e91_0.png&w=512&q=95";
@@ -32,6 +33,23 @@ const Home: React.FC = () => {
   const handleNavClick = (href: string): void => {
     console.log(`Navigating to: ${href}`);
     setIsCategoryMenuOpen(false);
+    
+    // Extract category from href (e.g., #characters -> characters)
+    const categoryId = href.replace('#', '');
+    
+    // Map category IDs to proper category names from the category tree
+    const categoryMap: { [key: string]: string } = {
+      'characters': 'Character',
+      'architecture': 'Architecture',
+      'vehicles': 'Vehicle',
+      'swords': 'Sword'
+    };
+    
+    const searchTerm = categoryMap[categoryId] || categoryId;
+    console.log(`Home: Navigating to models with search: ${searchTerm}`);
+    
+    // Navigate to models page with search parameter
+    navigate(`/models?search=${encodeURIComponent(searchTerm)}`);
   }
 
   const toggleCategoryMenu = (): void => {

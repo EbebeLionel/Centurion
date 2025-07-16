@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { getAllCategoryNamesForDisplay } from '../../utils/categoryTree';
 import './Header_dec.css';
 
 interface HeaderProps {
@@ -13,6 +14,8 @@ const Header: React.FC<HeaderProps> = ({ onNavigate }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
+  const [searchSuggestions, setSearchSuggestions] = useState<string[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
 
   // Handle scroll effect for header
   useEffect(() => {
@@ -22,6 +25,25 @@ const Header: React.FC<HeaderProps> = ({ onNavigate }) => {
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  // Generate search suggestions
+  useEffect(() => {
+    if (!searchQuery.trim()) {
+      setSearchSuggestions([]);
+      setShowSuggestions(false);
+      return;
+    }
+
+    const searchTerm = searchQuery.toLowerCase();
+    const categoryNames = getAllCategoryNamesForDisplay();
+    
+    // Filter category names that match the search term
+    const suggestions = categoryNames
+      .filter((category: string) => category.toLowerCase().includes(searchTerm))
+      .slice(0, 5); // Limit to 5 suggestions
+    setSearchSuggestions(suggestions);
+    setShowSuggestions(suggestions.length > 0 && isSearchFocused);
+  }, [searchQuery, isSearchFocused]);
 
   const handleNavigate = (path: string) => {
     if (onNavigate) {
@@ -35,7 +57,32 @@ const Header: React.FC<HeaderProps> = ({ onNavigate }) => {
   const handleSearch = () => {
     if (searchQuery.trim()) {
       handleNavigate(`/models?search=${encodeURIComponent(searchQuery.trim())}`);
+      setShowSuggestions(false);
     }
+  };
+
+  // Handle search suggestion click
+  const handleSuggestionClick = (suggestion: string) => {
+    setSearchQuery(suggestion);
+    handleNavigate(`/models?search=${encodeURIComponent(suggestion)}`);
+    setShowSuggestions(false);
+  };
+
+  // Handle search input focus
+  const handleSearchFocus = () => {
+    setIsSearchFocused(true);
+    if (searchSuggestions.length > 0) {
+      setShowSuggestions(true);
+    }
+  };
+
+  // Handle search input blur
+  const handleSearchBlur = () => {
+    setIsSearchFocused(false);
+    // Delay hiding suggestions to allow clicks
+    setTimeout(() => {
+      setShowSuggestions(false);
+    }, 200);
   };
 
   const toggleMenu = () => {
@@ -76,21 +123,46 @@ const Header: React.FC<HeaderProps> = ({ onNavigate }) => {
               </div>
               <input
                 className="search-input"
-                type="search"
-                placeholder="Search 3D models..."
+                type="text"
+                placeholder="Search 3D models or categories..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                onFocus={() => setIsSearchFocused(true)}
-                onBlur={() => setIsSearchFocused(false)}
+                onFocus={handleSearchFocus}
+                onBlur={handleSearchBlur}
                 onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
               />
               {searchQuery && (
-                <button className="search-clear" onClick={() => setSearchQuery('')}>
+                <button className="search-clear" onClick={() => {
+                  console.log('Header: Clear button clicked, current searchQuery:', searchQuery);
+                  setSearchQuery('');
+                  console.log('Header: Navigating to clean /models URL');
+                  handleNavigate('/models');
+                }}>
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
                     <line x1="18" y1="6" x2="6" y2="18"></line>
                     <line x1="6" y1="6" x2="18" y2="18"></line>
                   </svg>
                 </button>
+              )}
+              
+              {/* Search Suggestions */}
+              {showSuggestions && searchSuggestions.length > 0 && (
+                <div className="search-suggestions">
+                  {searchSuggestions.map((suggestion, index) => (
+                    <button
+                      key={index}
+                      className="search-suggestion-item"
+                      onClick={() => handleSuggestionClick(suggestion)}
+                    >
+                      <svg className="suggestion-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <circle cx="12" cy="12" r="3"></circle>
+                        <path d="M12 1v6m0 6v6"></path>
+                        <path d="M1 12h6m6 0h6"></path>
+                      </svg>
+                      <span className="suggestion-text">{suggestion}</span>
+                    </button>
+                  ))}
+                </div>
               )}
             </div>
           </div>

@@ -5,6 +5,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { ModelItem, getAllModels, formatPrice } from '../../utils/modelsStore';
 import { cartStore } from '../../utils/cartStore';
+import { isModelInCategory, searchByCategory, getAllCategoryNames } from '../../utils/categoryTree';
 
 const Models: React.FC = () => {
   const navigate = useNavigate();
@@ -13,6 +14,9 @@ const Models: React.FC = () => {
   const [isCategoryMenuOpen, setIsCategoryMenuOpen] = useState(false);
   const [models, setModels] = useState<ModelItem[]>([]);
   const [cartItemCount, setCartItemCount] = useState(0);
+  const [filteredModels, setFilteredModels] = useState<ModelItem[]>([]);
+  const [searchSuggestions, setSearchSuggestions] = useState<string[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
 
   // Navigation items array - same as Home page
   const navigationItems = [
@@ -20,6 +24,7 @@ const Models: React.FC = () => {
     { id: 'architecture', label: 'Architecture', href: '#architecture' },
     { id: 'vehicles', label: 'Vehicles', href: '#vehicles' },
     { id: 'swords', label: 'Swords', href: '#swords' },
+    { id: 'warrior', label: 'Warrior', href: '#warrior' },
   ];
 
   // Load models and get search query from URL params on component mount
@@ -28,10 +33,66 @@ const Models: React.FC = () => {
     setModels(allModels);
     
     const searchQuery = searchParams.get('search');
+    console.log('Models: URL params changed, searchQuery:', searchQuery);
+    console.log('Models: Current search state:', search);
+    
     if (searchQuery) {
+      console.log('Models: Setting search to:', searchQuery);
       setSearch(searchQuery);
+    } else {
+      console.log('Models: No search query in URL, clearing search');
+      setSearch('');
     }
   }, [searchParams]);
+
+  // Filter models based on search and category tree
+  useEffect(() => {
+    if (!search.trim()) {
+      setFilteredModels(models);
+      return;
+    }
+
+    const searchTerm = search.toLowerCase().trim();
+    
+    // First, try exact category match using tree structure
+    const categoryMatches = models.filter(model => {
+      const modelCategories = model.categories || [model.category];
+      return isModelInCategory(modelCategories, searchTerm);
+    });
+
+    // If we found category matches, use those
+    if (categoryMatches.length > 0) {
+      setFilteredModels(categoryMatches);
+      return;
+    }
+
+    // Otherwise, fall back to name-based search
+    const nameMatches = models.filter(model =>
+      model.name.toLowerCase().includes(searchTerm)
+    );
+
+    setFilteredModels(nameMatches);
+  }, [models, search]);
+
+  // Generate search suggestions
+  useEffect(() => {
+    if (!search.trim()) {
+      setSearchSuggestions([]);
+      setShowSuggestions(false);
+      return;
+    }
+
+    const searchTerm = search.toLowerCase();
+    const categoryNames = getAllCategoryNames();
+    
+    // Filter category names that match the search term
+    const suggestions = categoryNames
+      .filter(category => category.includes(searchTerm))
+      .slice(0, 5); // Limit to 5 suggestions
+
+    setSearchSuggestions(suggestions);
+    setShowSuggestions(suggestions.length > 0);
+  }, [search]);
 
   // Subscribe to cart changes
   useEffect(() => {
@@ -67,10 +128,47 @@ const Models: React.FC = () => {
     }
   };
 
+  // Handle search suggestion click
+  const handleSuggestionClick = (suggestion: string) => {
+    setSearch(suggestion);
+    setSearchParams({ search: suggestion });
+    setShowSuggestions(false);
+  };
+
+  // Handle search input focus
+  const handleSearchFocus = () => {
+    if (searchSuggestions.length > 0) {
+      setShowSuggestions(true);
+    }
+  };
+
+  // Handle search input blur
+  const handleSearchBlur = () => {
+    // Delay hiding suggestions to allow clicks
+    setTimeout(() => {
+      setShowSuggestions(false);
+    }, 200);
+  };
+
   // Handle category navigation
   const handleCategoryClick = (category: string, e: React.MouseEvent) => {
     e.preventDefault();
     console.log(`Filtering by category: ${category}`);
+    
+    // Map category IDs to proper category names from the category tree
+    const categoryMap: { [key: string]: string } = {
+      'characters': 'Character',
+      'architecture': 'Architecture',
+      'vehicles': 'Vehicle',
+      'swords': 'Sword'
+    };
+    
+    const searchTerm = categoryMap[category] || category;
+    console.log(`Models: Setting search to category: ${searchTerm}`);
+    
+    // Set search state and update URL
+    setSearch(searchTerm);
+    setSearchParams({ search: searchTerm });
     setIsCategoryMenuOpen(false); // Close mobile menu after clicking
   };
 
@@ -78,10 +176,19 @@ const Models: React.FC = () => {
     setIsCategoryMenuOpen(!isCategoryMenuOpen);
   };
 
-  // Filter models based on search
-  const filteredModels = models.filter((model) =>
-    model.name.toLowerCase().includes(search.toLowerCase())
-  );
+  // Get search results info
+  const getSearchResultsInfo = () => {
+    if (!search.trim()) {
+      return `Showing ${filteredModels.length} models`;
+    }
+    
+    const categoryNodes = searchByCategory(search);
+    if (categoryNodes.length > 0) {
+      return `Found ${filteredModels.length} models in "${search}" category`;
+    }
+    
+    return `Found ${filteredModels.length} models matching "${search}"`;
+  };
 
   // Handle model click (for future individual model pages)
   const handleModelClick = (model: ModelItem, e: React.MouseEvent) => {
@@ -165,6 +272,26 @@ const Models: React.FC = () => {
               </div>
             </div>
 
+            {/* Search Results Info */}
+            {(search.trim() || filteredModels.length !== models.length) && (
+              <div className="search-results-info">
+                <span className="results-text">{getSearchResultsInfo()}</span>
+                {search.trim() && (
+                  <button
+                    className="clear-search-btn"
+                    onClick={() => {
+                      console.log('Models: Clear search button clicked');
+                      setSearch('');
+                      setSearchParams({});
+                      navigate('/models');
+                    }}
+                  >
+                    ✕ Clear Search
+                  </button>
+                )}
+              </div>
+            )}
+
             <div className="gallery">
               {filteredModels.map((model) => (
                 <div className="pointer-react" key={model.id}>
@@ -199,29 +326,29 @@ const Models: React.FC = () => {
               
               {/* Show message when no results found */}
               {filteredModels.length === 0 && search && (
-                <div style={{
-                  textAlign: 'center',
-                  padding: '40px',
-                  width: '100%',
-                  fontFamily: '"Karla", sans-serif',
-                  fontSize: '18px',
-                  color: '#666'
-                }}>
-                  No models found for "{search}". Try a different search term.
+                <div className="no-results">
+                  <div className="no-results-icon">🔍</div>
+                  <h3>No models found</h3>
+                  <p>No models found for "{search}". Try a different search term or category.</p>
+                  <div className="search-suggestions-help">
+                    <p>Try searching for categories like:</p>
+                    <div className="category-examples">
+                      <span>Character</span>
+                      <span>Vehicle</span>
+                      <span>Machinery</span>
+                      <span>Weapons</span>
+                      <span>Architecture</span>
+                    </div>
+                  </div>
                 </div>
               )}
               
               {/* Show message when no models at all */}
               {models.length === 0 && !search && (
-                <div style={{
-                  textAlign: 'center',
-                  padding: '40px',
-                  width: '100%',
-                  fontFamily: '"Karla", sans-serif',
-                  fontSize: '18px',
-                  color: '#666'
-                }}>
-                  No models available. Upload some models to get started!
+                <div className="no-results">
+                  <div className="no-results-icon">📦</div>
+                  <h3>No models available</h3>
+                  <p>Upload some models to get started!</p>
                 </div>
               )}
             </div>
