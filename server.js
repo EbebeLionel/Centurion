@@ -3,9 +3,15 @@ const cors = require('cors');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
+const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
+const { dbOperations } = require('./database');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
+
+// JWT Secret - In production, use environment variable
+const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
 
 // Middleware
 app.use(cors());
@@ -221,6 +227,171 @@ app.post('/api/upload-complete-model', (req, res) => {
       res.status(500).json({ error: 'Failed to process uploaded files' });
     }
   });
+});
+
+// Authentication Routes
+
+// User signup endpoint
+app.post('/api/signup', async (req, res) => {
+  try {
+    const { username, password, email, gender } = req.body;
+
+    // Validate required fields
+    if (!username || !password || !email) {
+      return res.status(400).json({ 
+        error: 'Username, password, and email are required' 
+      });
+    }
+
+    // Check if user already exists
+    const existingUser = dbOperations.getUserByUsername(username);
+    if (existingUser.user) {
+      return res.status(409).json({ 
+        error: 'Username already exists' 
+      });
+    }
+
+    const existingEmail = dbOperations.getUserByEmail(email);
+    if (existingEmail.user) {
+      return res.status(409).json({ 
+        error: 'Email already exists' 
+      });
+    }
+
+    // Hash password
+    const saltRounds = 10;
+    const hashedPassword = await bcrypt.hash(password, saltRounds);
+
+    // Create user in database
+    const result = dbOperations.createUser({
+      username,
+      email,
+      password: hashedPassword,
+      gender: gender || null
+    });
+
+    if (!result.success) {
+      return res.status(500).json({ error: result.error });
+    }
+
+    // Generate JWT token
+    const token = jwt.sign(
+      { userId: result.userId, username },
+      JWT_SECRET,
+      { expiresIn: '7d' }
+    );
+
+    res.status(201).json({
+      message: 'User created successfully',
+      token,
+      user: {
+        id: result.userId,
+        username,
+        email,
+        gender
+      }
+    });
+
+  } catch (error) {
+    console.error('Signup error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// User login endpoint
+app.post('/api/login', async (req, res) => {
+  try {
+    const { username, password } = req.body;
+
+    // Validate required fields
+    if (!username || !password) {
+      return res.status(400).json({ 
+        error: 'Username and password are required' 
+      });
+    }
+
+    // Get user from database
+    const result = dbOperations.getUserByUsername(username);
+    if (!result.user) {
+      return res.status(401).json({ 
+        error: 'Invalid username or password' 
+      });
+    }
+
+    const user = result.user;
+
+    // Verify password
+    const isValidPassword = await bcrypt.compare(password, user.password);
+    if (!isValidPassword) {
+      return res.status(401).json({ 
+        error: 'Invalid username or password' 
+      });
+    }
+
+    // Generate JWT token
+    const token = jwt.sign(
+      { userId: user.id, username: user.username },
+      JWT_SECRET,
+      { expiresIn: '7d' }
+    );
+
+    res.json({
+      message: 'Login successful',
+      token,
+      user: {
+        id: user.id,
+        username: user.username,
+        email: user.email,
+        gender: user.gender
+      }
+    });
+
+  } catch (error) {
+    console.error('Login error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// JWT middleware for protected routes
+const authenticateToken = (req, res, next) => {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
+
+  if (!token) {
+    return res.status(401).json({ error: 'Access token required' });
+  }
+
+  jwt.verify(token, JWT_SECRET, (err, user) => {
+    if (err) {
+      return res.status(403).json({ error: 'Invalid or expired token' });
+    }
+    req.user = user;
+    next();
+  });
+};
+
+// Protected route to get user profile
+app.get('/api/profile', authenticateToken, (req, res) => {
+  try {
+    const result = dbOperations.getUserById(req.user.userId);
+    if (!result.user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    const user = result.user;
+    res.json({
+      user: {
+        id: user.id,
+        username: user.username,
+        email: user.email,
+        gender: user.gender,
+        created_at: user.created_at
+      }
+    });
+  } catch (error) {
+    console.error('Profile error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
 });
 
 // Serve uploaded files

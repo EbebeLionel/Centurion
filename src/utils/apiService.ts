@@ -33,6 +33,128 @@ interface CompleteUploadResponse {
   };
 }
 
+// Authentication interfaces
+interface LoginRequest {
+  username: string;
+  password: string;
+}
+
+interface SignUpRequest {
+  username: string;
+  password: string;
+  email: string;
+  gender?: string;
+}
+
+interface AuthResponse {
+  message: string;
+  token: string;
+  user: {
+    id: number;
+    username: string;
+    email: string;
+    gender?: string;
+  };
+}
+
+interface UserProfile {
+  user: {
+    id: number;
+    username: string;
+    email: string;
+    gender?: string;
+    created_at: string;
+  };
+}
+
+// Authentication functions
+export const login = async (credentials: LoginRequest): Promise<AuthResponse> => {
+  const response = await fetch(`${API_BASE_URL}/api/login`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(credentials),
+  });
+
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.error || 'Login failed');
+  }
+
+  const data = await response.json();
+  
+  // Store token in localStorage
+  if (data.token) {
+    localStorage.setItem('authToken', data.token);
+    localStorage.setItem('user', JSON.stringify(data.user));
+  }
+
+  return data;
+};
+
+export const signUp = async (userData: SignUpRequest): Promise<AuthResponse> => {
+  const response = await fetch(`${API_BASE_URL}/api/signup`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(userData),
+  });
+
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.error || 'Sign up failed');
+  }
+
+  const data = await response.json();
+  
+  // Store token in localStorage
+  if (data.token) {
+    localStorage.setItem('authToken', data.token);
+    localStorage.setItem('user', JSON.stringify(data.user));
+  }
+
+  return data;
+};
+
+export const getUserProfile = async (): Promise<UserProfile> => {
+  const token = localStorage.getItem('authToken');
+  if (!token) {
+    throw new Error('No authentication token found');
+  }
+
+  const response = await fetch(`${API_BASE_URL}/api/profile`, {
+    method: 'GET',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+  });
+
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.error || 'Failed to get user profile');
+  }
+
+  return await response.json();
+};
+
+export const logout = () => {
+  localStorage.removeItem('authToken');
+  localStorage.removeItem('user');
+};
+
+export const isAuthenticated = (): boolean => {
+  const token = localStorage.getItem('authToken');
+  return !!token;
+};
+
+export const getCurrentUser = () => {
+  const userStr = localStorage.getItem('user');
+  return userStr ? JSON.parse(userStr) : null;
+};
+
 export const uploadModelFile = async (file: File): Promise<UploadResponse> => {
   const formData = new FormData();
   formData.append('modelFile', file);

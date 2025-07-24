@@ -25,6 +25,8 @@ const Models: React.FC = () => {
     { id: 'vehicles', label: 'Vehicles', href: '#vehicles' },
     { id: 'swords', label: 'Swords', href: '#swords' },
     { id: 'warrior', label: 'Warrior', href: '#warrior' },
+    { id: 'man', label: 'Man', href: '#man' },
+    { id: 'woman', label: 'Woman', href: '#woman' },
   ];
 
   // Load models and get search query from URL params on component mount
@@ -190,12 +192,11 @@ const Models: React.FC = () => {
     return `Found ${filteredModels.length} models matching "${search}"`;
   };
 
-  // Handle model click (for future individual model pages)
+  // Handle model click - navigate to detail page
   const handleModelClick = (model: ModelItem, e: React.MouseEvent) => {
     e.preventDefault();
-    console.log(`Clicked on model: ${model.name}`);
-    // Future: navigate to individual model page
-    // navigate(`/models/${model.id}`);
+    console.log(`Navigating to model detail: ${model.name}`);
+    navigate(`/models/${model.id}`);
   };
 
   // Handle add to cart
@@ -213,15 +214,6 @@ const Models: React.FC = () => {
       <main>
         <section>
           <div className="parent-content-new-tab">
-            {/* Search Field 
-            <div className="search-bar-models">
-              <input
-                type="text"
-                placeholder="Search models..."
-                value={search}
-                onChange={handleSearchChange}
-              />
-            </div>*/}
 
             <div className="second-nav">
               {/* Desktop Navigation */}
@@ -292,16 +284,17 @@ const Models: React.FC = () => {
               </div>
             )}
 
+
             <div className="gallery">
               {filteredModels.map((model) => (
-                <div className="pointer-react" key={model.id}>
+                <div 
+                  className="pointer-react" 
+                  key={model.id}
+                  onClick={(e) => handleModelClick(model, e)}
+                  style={{ cursor: 'pointer' }}
+                >
                   <div className="image-container">
-                    <a
-                      href="#"
-                      onClick={(e) => handleModelClick(model, e)}
-                    >
-                      <img src={model.image} alt={model.name} />
-                    </a>
+                    <img src={model.image} alt={model.name} />
                     <div className="overlay"></div>
                     <div className="price-box">
                       <span className="price">{formatPrice(model.price)}</span>

@@ -1,3 +1,4 @@
+// Sell.tsx - Updated with compression support
 import './Sell_dec.css';
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -10,9 +11,13 @@ import {
   formatPrice,
   convertImageToBase64,
   convertModelFileToBase64,
-  validateModelFile
+  validateModelFile,
+  downloadModelFile,
+  getFileSizeDisplay,
+  estimateStorageSize
 } from '../../utils/modelsStore';
 import { getAllFlatCategories, getCategorySuggestions } from '../../utils/categoryTree';
+import { isCompressionAvailable, formatFileSize } from '../../utils/fileCompressionUtils';
 
 interface SoldItem {
   id: string;
@@ -34,11 +39,15 @@ const Sell: React.FC = () => {
   const [imagePreview, setImagePreview] = useState<string>('');
   const [modelFile, setModelFile] = useState<File | null>(null);
   const [modelFileInfo, setModelFileInfo] = useState<string>('');
+  const [fileProcessingStatus, setFileProcessingStatus] = useState<string>('');
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [customCategory, setCustomCategory] = useState('');
   const [errors, setErrors] = useState<{[key: string]: string}>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [editingModel, setEditingModel] = useState<ModelItem | null>(null);
+
+  // Compression status
+  const [compressionAvailable] = useState(isCompressionAvailable());
 
   // Get all available categories from the tree structure
   const [allCategories, setAllCategories] = useState<string[]>([]);
@@ -119,8 +128,16 @@ const Sell: React.FC = () => {
       const validation = validateModelFile(file);
       if (validation.isValid) {
         setModelFile(file);
-        setModelFileInfo(`${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)`);
-        setErrors(prev => ({ ...prev, modelFile: '' }));
+        
+        const sizeInfo = `${file.name} (${formatFileSize(file.size)})`;
+        const storageEstimate = estimateStorageSize(file);
+        setModelFileInfo(sizeInfo);
+        setFileProcessingStatus(storageEstimate);
+        
+        setErrors(prev => ({ 
+          ...prev, 
+          modelFile: validation.error || '' // Show warning if any
+        }));
       } else {
         setErrors(prev => ({ ...prev, modelFile: validation.error || 'Invalid file' }));
         // Reset the file input
@@ -210,6 +227,7 @@ const Sell: React.FC = () => {
     
     if (Object.keys(newErrors).length === 0) {
       setIsSubmitting(true);
+      setFileProcessingStatus('Processing file...');
       
       try {
         if (editingModel) {
@@ -229,9 +247,14 @@ const Sell: React.FC = () => {
           
           // Update model file if new one provided
           if (modelFile) {
-            updatedModel.modelFile = await convertModelFileToBase64(modelFile);
+            setFileProcessingStatus('Compressing file...');
+            const fileResult = await convertModelFileToBase64(modelFile);
+            updatedModel.modelFile = fileResult.data;
             updatedModel.modelFileName = modelFile.name;
-            updatedModel.modelFileSize = modelFile.size;
+            updatedModel.modelFileSize = fileResult.originalSize;
+            updatedModel.modelFinalSize = fileResult.finalSize;
+            updatedModel.isModelCompressed = fileResult.isCompressed;
+            updatedModel.compressionRatio = fileResult.compressionRatio;
           }
           
           // Update in models store
@@ -252,16 +275,22 @@ const Sell: React.FC = () => {
           }
         } else {
           // Creating new model
+          setFileProcessingStatus('Processing image...');
           const imageBase64 = await convertImageToBase64(modelImage!);
-          const modelFileBase64 = await convertModelFileToBase64(modelFile!);
+          
+          setFileProcessingStatus('Compressing model file...');
+          const fileResult = await convertModelFileToBase64(modelFile!);
           
           const newModel = addModel({
             name: modelName,
             price: Number(modelPrice),
             image: imageBase64,
-            modelFile: modelFileBase64,
+            modelFile: fileResult.data,
             modelFileName: modelFile!.name,
-            modelFileSize: modelFile!.size,
+            modelFileSize: fileResult.originalSize,
+            modelFinalSize: fileResult.finalSize,
+            isModelCompressed: fileResult.isCompressed,
+            compressionRatio: fileResult.compressionRatio,
             category: selectedCategories[0].toLowerCase(),
             categories: selectedCategories
           });
@@ -269,8 +298,12 @@ const Sell: React.FC = () => {
           // Update local state
           setOnSaleModels(prev => [...prev, newModel]);
           
-          // Show success message
-          alert('Model uploaded successfully!');
+          // Show success message with compression info
+          let successMessage = 'Model uploaded successfully!';
+          if (fileResult.isCompressed && fileResult.compressionRatio) {
+            successMessage += ` File compressed by ${fileResult.compressionRatio.toFixed(1)}%.`;
+          }
+          alert(successMessage);
         }
         
         // Reset form
@@ -280,6 +313,7 @@ const Sell: React.FC = () => {
         setImagePreview('');
         setModelFile(null);
         setModelFileInfo('');
+        setFileProcessingStatus('');
         setSelectedCategories([]);
         setCustomCategory('');
         
@@ -291,6 +325,7 @@ const Sell: React.FC = () => {
         alert('Failed to save model. Please try again.');
       } finally {
         setIsSubmitting(false);
+        setFileProcessingStatus('');
       }
     }
   };
@@ -317,6 +352,19 @@ const Sell: React.FC = () => {
     }
   };
 
+  // Handle model download
+  const handleDownloadModel = async (model: ModelItem) => {
+    try {
+      setFileProcessingStatus('Preparing download...');
+      await downloadModelFile(model);
+      setFileProcessingStatus('');
+    } catch (error) {
+      console.error('Download failed:', error);
+      alert('Failed to download model file.');
+      setFileProcessingStatus('');
+    }
+  };
+
   return (
     <>
       <Header onNavigate={handleHeaderNavigation} />
@@ -327,6 +375,11 @@ const Sell: React.FC = () => {
           <div className="sell-header">
             <h1 className="sell-title">Sell Your 3D Models</h1>
             <p className="sell-subtitle">Share your creativity with the world and earn from your talent</p>
+            {!compressionAvailable && (
+              <div className="compression-warning">
+                <span>⚠️ File compression not available. Large files may have slower upload times.</span>
+              </div>
+            )}
           </div>
 
           {/* Navigation Tabs */}
@@ -567,7 +620,9 @@ const Sell: React.FC = () => {
                               <div className="file-icon">📁</div>
                               <div className="file-details">
                                 <div className="file-name">{modelFileInfo}</div>
-                                <div className="file-status">Ready to upload</div>
+                                <div className="file-status">
+                                  {fileProcessingStatus || 'Ready to upload'}
+                                </div>
                               </div>
                             </div>
                             <button
@@ -576,6 +631,7 @@ const Sell: React.FC = () => {
                               onClick={() => {
                                 setModelFile(null);
                                 setModelFileInfo('');
+                                setFileProcessingStatus('');
                                 // Reset the file input
                                 const fileInput = document.getElementById('modelFile') as HTMLInputElement;
                                 if (fileInput) {
@@ -591,7 +647,10 @@ const Sell: React.FC = () => {
                             <div className="upload-icon">🎯</div>
                             <div className="upload-text">
                               <span className="upload-main">Click to upload 3D model</span>
-                              <span className="upload-sub">OBJ, FBX, GLTF, GLB, DAE, 3DS, BLEND, STL, PLY</span>
+                              <span className="upload-sub">
+                                OBJ, FBX, GLTF, GLB, DAE, 3DS, BLEND, STL, PLY
+                                {compressionAvailable && <><br />Files over 50MB will be compressed</>}
+                              </span>
                             </div>
                           </label>
                         )}
@@ -613,7 +672,7 @@ const Sell: React.FC = () => {
                           <span className="button-icon">{editingModel ? '✏️' : '🚀'}</span>
                           <span className="button-text">
                             {isSubmitting ?
-                              (editingModel ? 'Updating...' : 'Uploading...') :
+                              (fileProcessingStatus || (editingModel ? 'Updating...' : 'Uploading...')) :
                               (editingModel ? 'Update Model' : 'List Model for Sale')
                             }
                           </span>
@@ -633,6 +692,7 @@ const Sell: React.FC = () => {
                             setImagePreview('');
                             setModelFile(null);
                             setModelFileInfo('');
+                            setFileProcessingStatus('');
                             setSelectedCategories([]);
                             setCustomCategory('');
                             setErrors({});
@@ -663,11 +723,19 @@ const Sell: React.FC = () => {
                         <div className="model-image-container">
                           <img src={model.image} alt={model.name} className="model-image" />
                           <div className="price-badge">{formatPrice(model.price)}</div>
+                          {model.isModelCompressed && (
+                            <div className="compression-badge">
+                              🗜️ Compressed
+                            </div>
+                          )}
                         </div>
                         <div className="model-info">
                           <h3 className="model-name">{model.name}</h3>
                           <div className="model-meta">
                             <span className="date-added">Added: {new Date(model.dateAdded).toLocaleDateString()}</span>
+                            <div className="file-size-info">
+                              {getFileSizeDisplay(model)}
+                            </div>
                           </div>
                         </div>
                         <div className="model-actions">
@@ -676,6 +744,13 @@ const Sell: React.FC = () => {
                             onClick={() => handleEditModel(model)}
                           >
                             Edit
+                          </button>
+                          <button
+                            className="action-button download"
+                            onClick={() => handleDownloadModel(model)}
+                            disabled={!model.modelFile}
+                          >
+                            Download
                           </button>
                           <button
                             className="action-button remove"

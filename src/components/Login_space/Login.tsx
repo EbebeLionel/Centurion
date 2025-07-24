@@ -1,10 +1,17 @@
 import './Login_dec.css';
 import Header from '../Header_space/Header';
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { login } from '../../utils/apiService';
 
 const Login: React.FC = () => {
     const navigate = useNavigate();
+    const [formData, setFormData] = useState({
+        username: '',
+        password: ''
+    });
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState('');
 
     const handleSignUpClick = (e: React.MouseEvent) => {
         e.preventDefault();
@@ -26,12 +33,31 @@ const Login: React.FC = () => {
         }
     };
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const { name, value } = e.target;
+        setFormData(prev => ({
+            ...prev,
+            [name]: value
+        }));
+    };
+
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        // Handle login logic here
-        console.log('Login form submitted');
-        // For now, redirect to home after login
-        navigate('/home');
+        setLoading(true);
+        setError('');
+
+        try {
+            const response = await login(formData);
+            console.log('Login successful:', response);
+            
+            // Redirect to home after successful login
+            navigate('/home');
+        } catch (err) {
+            console.error('Login error:', err);
+            setError(err instanceof Error ? err.message : 'Login failed');
+        } finally {
+            setLoading(false);
+        }
     };
 
     // Custom navigation function for Header
@@ -52,17 +78,34 @@ const Login: React.FC = () => {
                     
                     <form onSubmit={handleSubmit}>
                         <h2>Sign In</h2>
+                        {error && <div style={{ color: 'red', marginBottom: '10px' }}>{error}</div>}
                         <div className="inputBox">
                             <span>Username</span>
-                            <input type="text" required />
+                            <input
+                                type="text"
+                                name="username"
+                                value={formData.username}
+                                onChange={handleInputChange}
+                                required
+                            />
                             <i></i>
                         </div>
                         <div className="inputBox">
                             <span>Enter Password</span>
-                            <input type="password" required />
+                            <input
+                                type="password"
+                                name="password"
+                                value={formData.password}
+                                onChange={handleInputChange}
+                                required
+                            />
                             <i></i>
                         </div>
-                        <input type="submit" value="Login" />
+                        <input
+                            type="submit"
+                            value={loading ? "Logging in..." : "Login"}
+                            disabled={loading}
+                        />
                         <div className="links">
                             <a href="#" onClick={handleForgotPasswordClick}>Forgot Password?</a>
                             <a href="#" onClick={handleSignUpClick}>Sign Up</a>

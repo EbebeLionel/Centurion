@@ -1,12 +1,18 @@
+// modelsStore.ts - Updated with compression support
+import { processFileForStorage, createDownloadBlob, formatFileSize, debugFileData } from './fileCompressionUtils';
+
 // Shared data store for models
 export interface ModelItem {
   id: string;
   name: string;
   price: number;
   image: string;
-  modelFile?: string; // Base64 string or file path for 3D model file
+  modelFile?: string; // Base64 string or compressed data for 3D model file
   modelFileName?: string; // Original filename of the 3D model
-  modelFileSize?: number; // File size in bytes
+  modelFileSize?: number; // Original file size in bytes
+  modelFinalSize?: number; // Final storage size in bytes (after compression)
+  isModelCompressed?: boolean; // Whether the model file is compressed
+  compressionRatio?: number; // Compression ratio if compressed
   dateAdded: string;
   category: string;
   categories?: string[]; // Optional array for multiple categories
@@ -22,7 +28,7 @@ const defaultModels: ModelItem[] = [
     name: "Malenia",
     image: "https://tse3.mm.bing.net/th?id=OIP.uIDEAgOeB1feLJ4hBcZRJQHaEK&pid=Api&P=0&h=220",
     category: "characters",
-    categories: ["Character", "Boss", "Fantasy", "Woman", "Elden ring"], // Can be character, boss, and fantasy
+    categories: ["Character", "Boss", "Fantasy", "Woman", "Elden ring"],
     price: 24.99,
     dateAdded: '2024-01-01',
     isUserUploaded: false
@@ -32,7 +38,7 @@ const defaultModels: ModelItem[] = [
     name: "Radahn",
     image: "https://tse2.mm.bing.net/th?id=OIP.5p1oE1izcBrr6kqPaB755AHaEK&pid=Api&P=0&h=220",
     category: "characters",
-    categories: ["Character", "Boss", "Warrior", "Elden Ring", "Warlord"], // Can be character, boss, and warrior
+    categories: ["Character", "Boss", "Warrior", "Elden Ring", "Warlord"],
     price: 29.99,
     dateAdded: '2024-01-02',
     isUserUploaded: false
@@ -42,7 +48,7 @@ const defaultModels: ModelItem[] = [
     name: "Goku",
     image: "https://tse2.mm.bing.net/th?id=OIP.RvZBJb7M19bnds9w5pH4ugHaE5&pid=Api&P=0&h=220",
     category: "characters",
-    categories: ["Character", "Humanoid", "Warrior", "Saiyan", "Dragon ball"], // Can be character, humanoid, and warrior
+    categories: ["Character", "Humanoid", "Warrior", "Saiyan", "Dragon ball"],
     price: 19.99,
     dateAdded: '2024-01-03',
     isUserUploaded: false
@@ -52,7 +58,7 @@ const defaultModels: ModelItem[] = [
     name: "Vegeta",
     image: "https://tse2.mm.bing.net/th?id=OIP.6kFD8fmxtr0I65f5eIeywgHaGL&pid=Api&P=0&h=220",
     category: "characters",
-    categories: ["Character", "Humanoid", "Warrior", "Saiyan", "Dragon ball"], // Can be character, humanoid, and warrior
+    categories: ["Character", "Humanoid", "Warrior", "Saiyan", "Dragon ball"],
     price: 19.99,
     dateAdded: '2024-01-04',
     isUserUploaded: false
@@ -62,7 +68,7 @@ const defaultModels: ModelItem[] = [
     name: "Tarnished",
     image: "https://tse2.mm.bing.net/th/id/OIP.eEOuN7GvsAgX8ndZPcPXaQHaDt?pid=Api&P=0&h=220",
     category: "characters",
-    categories: ["Character", "Humanoid", "Warrior", "Elden ring", "Elden Lord"], // Can be character, humanoid, and warrior
+    categories: ["Character", "Humanoid", "Warrior", "Elden ring", "Elden Lord"],
     price: 22.99,
     dateAdded: '2024-01-05',
     isUserUploaded: false
@@ -159,14 +165,86 @@ export const convertImageToBase64 = (file: File): Promise<string> => {
   });
 };
 
-// Convert 3D model file to base64 string for storage
-export const convertModelFileToBase64 = (file: File): Promise<string> => {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(reader.result as string);
-    reader.onerror = reject;
-    reader.readAsDataURL(file);
-  });
+// Convert 3D model file to base64 string with compression support
+export const convertModelFileToBase64 = async (file: File): Promise<{
+  data: string;
+  originalSize: number;
+  finalSize: number;
+  isCompressed: boolean;
+  compressionRatio?: number;
+}> => {
+  try {
+    const result = await processFileForStorage(file);
+    
+    return {
+      data: result.data,
+      originalSize: result.originalSize,
+      finalSize: result.finalSize,
+      isCompressed: result.isCompressed,
+      compressionRatio: result.compressionRatio
+    };
+  } catch (error) {
+    console.error('Error processing model file:', error);
+    throw new Error('Failed to process model file');
+  }
+};
+
+// Download model file (handles both compressed and uncompressed)
+export const downloadModelFile = async (model: ModelItem): Promise<void> => {
+  if (!model.modelFile || !model.modelFileName) {
+    throw new Error('Model file not available for download');
+  }
+
+  try {
+    // Debug file data
+    debugFileData(model.modelFile, model.modelFileName);
+    
+    console.log('Creating download blob...');
+    const blob = await createDownloadBlob(model.modelFile, model.modelFileName);
+    
+    console.log('Blob created successfully:', {
+      size: blob.size,
+      type: blob.type
+    });
+    
+    // Verify blob has content
+    if (blob.size === 0) {
+      throw new Error('Generated file is empty - file may be corrupted');
+    }
+    
+    // Create download link
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = model.modelFileName;
+    
+    // Add to DOM temporarily to trigger download
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    // Clean up
+    URL.revokeObjectURL(url);
+    
+    console.log('Download initiated successfully');
+  } catch (error) {
+    console.error('Error downloading model file:', error);
+    throw new Error(`Failed to download model file: ${error instanceof Error ? error.message : 'Unknown error'}`);
+  }
+};
+
+// Get file size display text
+export const getFileSizeDisplay = (model: ModelItem): string => {
+  if (!model.modelFileSize) return 'Unknown size';
+  
+  const originalSize = formatFileSize(model.modelFileSize);
+  
+  if (model.isModelCompressed && model.modelFinalSize && model.compressionRatio) {
+    const finalSize = formatFileSize(model.modelFinalSize);
+    return `${originalSize} (compressed to ${finalSize}, ${model.compressionRatio.toFixed(1)}% reduction)`;
+  }
+  
+  return originalSize;
 };
 
 // Validate 3D model file format
@@ -182,5 +260,28 @@ export const validateModelFile = (file: File): { isValid: boolean; error?: strin
     };
   }
   
+  // Additional size validation (warn for very large files)
+  const maxRecommendedSize = 500 * 1024 * 1024; // 500MB
+  if (file.size > maxRecommendedSize) {
+    return {
+      isValid: true,
+      error: `Warning: File is very large (${formatFileSize(file.size)}). Upload may take a while and compression will be applied.`
+    };
+  }
+  
   return { isValid: true };
+};
+
+// Estimate storage requirements
+export const estimateStorageSize = (file: File): string => {
+  const sizeMB = file.size / (1024 * 1024);
+  
+  if (sizeMB <= 50) {
+    return `Estimated storage: ~${formatFileSize(file.size)} (no compression)`;
+  } else {
+    // Rough compression estimate (varies by file type)
+    const estimatedCompression = 0.3; // Assume 30% of original size
+    const estimatedSize = file.size * estimatedCompression;
+    return `Estimated storage: ~${formatFileSize(estimatedSize)} (compressed from ${formatFileSize(file.size)})`;
+  }
 };

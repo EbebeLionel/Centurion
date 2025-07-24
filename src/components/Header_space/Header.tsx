@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { getAllCategoryNamesForDisplay } from '../../utils/categoryTree';
+import { isAuthenticated, getCurrentUser, logout } from '../../utils/apiService';
+import UserAvatar from '../UserAvatar/UserAvatar';
 import './Header_dec.css';
 
 interface HeaderProps {
@@ -16,6 +18,29 @@ const Header: React.FC<HeaderProps> = ({ onNavigate }) => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [searchSuggestions, setSearchSuggestions] = useState<string[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [userAuthenticated, setUserAuthenticated] = useState(false);
+  const [currentUser, setCurrentUser] = useState<any>(null);
+  const [showUserMenu, setShowUserMenu] = useState(false);
+
+  // Check authentication status on mount
+  useEffect(() => {
+    const checkAuth = () => {
+      const authenticated = isAuthenticated();
+      const user = getCurrentUser();
+      setUserAuthenticated(authenticated);
+      setCurrentUser(user);
+    };
+    
+    checkAuth();
+    
+    // Listen for storage changes (when user logs in/out in another tab)
+    const handleStorageChange = () => {
+      checkAuth();
+    };
+    
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, []);
 
   // Handle scroll effect for header
   useEffect(() => {
@@ -87,6 +112,18 @@ const Header: React.FC<HeaderProps> = ({ onNavigate }) => {
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
+  };
+
+  const handleLogout = () => {
+    logout();
+    setUserAuthenticated(false);
+    setCurrentUser(null);
+    setShowUserMenu(false);
+    handleNavigate('/home');
+  };
+
+  const toggleUserMenu = () => {
+    setShowUserMenu(!showUserMenu);
   };
 
   return (
@@ -181,14 +218,53 @@ const Header: React.FC<HeaderProps> = ({ onNavigate }) => {
               <span className="nav-text">Settings</span>
               <div className="nav-indicator"></div>
             </a>
-            <a className={`nav-item login-nav ${location.pathname === '/login' ? 'active' : ''}`} onClick={() => handleNavigate('/login')}>
-              <img
-                className="login-icon"
-                src="https://cdn-icons-png.flaticon.com/128/64/64572.png"
-                alt="Login"
-              />
-              <span className="login-text">Log in</span>
-            </a>
+            
+            {/* Conditional rendering for login/user avatar */}
+            {userAuthenticated && currentUser ? (
+              <div className="user-avatar-section" style={{ position: 'relative' }}>
+                <div onClick={toggleUserMenu} style={{ cursor: 'pointer' }}>
+                  <UserAvatar 
+                    username={currentUser.username || currentUser.name || currentUser.email} 
+                    size={44} 
+                  />
+                </div>
+                
+                {/* User dropdown menu */}
+                {showUserMenu && (
+                  <div className="user-dropdown">
+                    <div className="user-info">
+                      <div className="user-name">{currentUser.username || currentUser.name}</div>
+                      <div className="user-email">{currentUser.email}</div>
+                    </div>
+                    <div className="dropdown-divider"></div>
+                    <button className="dropdown-item" onClick={() => { handleNavigate('/settings'); setShowUserMenu(false); }}>
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <circle cx="12" cy="12" r="3"></circle>
+                        <path d="M12 1v6m0 6v6m9-9h-6m-6 0H3"></path>
+                      </svg>
+                      Settings
+                    </button>
+                    <button className="dropdown-item logout-item" onClick={handleLogout}>
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                        <polyline points="16,17 21,12 16,7"></polyline>
+                        <line x1="21" y1="12" x2="9" y2="12"></line>
+                      </svg>
+                      Logout
+                    </button>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <a className={`nav-item login-nav ${location.pathname === '/login' ? 'active' : ''}`} onClick={() => handleNavigate('/login')}>
+                <img
+                  className="login-icon"
+                  src="https://cdn-icons-png.flaticon.com/128/64/64572.png"
+                  alt="Login"
+                />
+                <span className="login-text">Log in</span>
+              </a>
+            )}
           </nav>
 
           {/* Mobile Menu Button */}
@@ -268,18 +344,34 @@ const Header: React.FC<HeaderProps> = ({ onNavigate }) => {
               </svg>
             </a>
             
-            <a className="mobile-nav-item" onClick={() => handleNavigate('/login')}>
-              <div className="mobile-nav-icon">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-                  <circle cx="12" cy="7" r="4"></circle>
+            {/* Mobile menu user section */}
+            {userAuthenticated && currentUser ? (
+              <a className="mobile-nav-item" onClick={() => handleNavigate('/settings')}>
+                <div className="mobile-nav-icon-avatar">
+                  <UserAvatar 
+                    username={currentUser.username || currentUser.name || currentUser.email} 
+                    size={32} 
+                  />
+                </div>
+                <span>{currentUser.username || currentUser.name}</span>
+                <svg className="nav-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                  <polyline points="9,18 15,12 9,6"></polyline>
                 </svg>
-              </div>
-              <span>Log in</span>
-              <svg className="nav-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                <polyline points="9,18 15,12 9,6"></polyline>
-              </svg>
-            </a>
+              </a>
+            ) : (
+              <a className="mobile-nav-item" onClick={() => handleNavigate('/login')}>
+                <div className="mobile-nav-icon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                    <circle cx="12" cy="7" r="4"></circle>
+                  </svg>
+                </div>
+                <span>Log in</span>
+                <svg className="nav-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                  <polyline points="9,18 15,12 9,6"></polyline>
+                </svg>
+              </a>
+            )}
           </nav>
 
           <div className="mobile-menu-footer">

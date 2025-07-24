@@ -17,6 +17,8 @@ const Home: React.FC = () => {
     { id: 'vehicles', label: 'Vehicles', href: '#vehicles' },
     { id: 'swords', label: 'Swords', href: '#swords' },
     { id: 'warrior', label: 'Warrior', href: '#warrior' },
+    { id: 'man', label: 'Man', href: '#man' },
+    { id: 'woman', label: 'Woman', href: '#woman' },
   ];
 
   const infoOneUrl = "https://cdn.cgdream.ai/_next/image?url=https%3A%2F%2Fapi.cgdream.ai%2Frails%2Factive_storage%2Fblobs%2Fredirect%2FeyJfcmFpbHMiOnsibWVzc2FnZSI6IkJBaHBBOUUyRnc9PSIsImV4cCI6bnVsbCwicHVyIjoiYmxvYl9pZCJ9fQ%3D%3D--26c712540287369ed6fd9952c7e66e9e75622a53%2Fe4c4bd12-274f-450c-9f76-e85fa39d9e91_0.png&w=512&q=95";
